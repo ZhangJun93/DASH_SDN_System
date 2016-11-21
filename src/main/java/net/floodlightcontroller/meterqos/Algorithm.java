@@ -14,6 +14,7 @@ public class Algorithm implements Runnable{
 	
 	public Algorithm() {
 		// TODO Auto-generated constructor stub
+		//xxx
 		meterIpMap = new HashMap<Integer,String>();
 	}
 	
