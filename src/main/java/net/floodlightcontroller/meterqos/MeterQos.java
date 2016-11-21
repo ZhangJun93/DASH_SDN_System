@@ -334,7 +334,7 @@ public class MeterQos extends JFrame implements IFloodlightModule, IOFMessageLis
 //		}else{
 //			rate = rateMap.get(2);
 //		}
-		rate = 200;
+		rate = 700;
 		int burst = 2000;
 		DropMeter dropMeter = new DropMeter(dpid, ID, 0, rate, burst);
 		dropMeter.write(cmd);
@@ -494,7 +494,7 @@ public class MeterQos extends JFrame implements IFloodlightModule, IOFMessageLis
 		DropMeter.Cmd cmd = DropMeter.Cmd.MODIFY;
 		DropMeter dropMeter = new DropMeter(dpid, id, 0, rate, burst);
 		dropMeter.write(cmd);
-		logger.info("modify meter:"+id +" success...");
+		logger.info("modify meter:"+ id +" success...");
 		
 	}
 	private static OFFlowMod getFlow(String ip)

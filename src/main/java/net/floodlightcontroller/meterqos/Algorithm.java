@@ -73,7 +73,6 @@ public class Algorithm implements Runnable{
 							System.out.println("buffer:" + buffer);
 							
 							x3[id] = buffer;
-							System.out.println("");
 							if(buffer==0)
 							{
 								//TODO

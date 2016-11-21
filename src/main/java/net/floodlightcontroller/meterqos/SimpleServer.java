@@ -18,16 +18,54 @@ import java.util.regex.Pattern;
  */
 public class SimpleServer implements Runnable{
 
-    private List<String> staticInet = new ArrayList<>();
-    private Map<String,Socket> doubleClient = new HashMap<>();
+    private static List<String> staticInet = new ArrayList<>();
+    private static Map<String,Socket> doubleClient = new HashMap<>();
     public static SimpleServer simpleServer = null;
     private ServerSocket ss;
+    public static Map<String,Integer> isAliveMap = new HashMap<>();
 
     public SimpleServer() throws Exception{
 
 
         //waiting for the connect
         ss = new ServerSocket(40000);
+        
+        //listening the host whether is alive
+        Timer timer = new Timer();
+		timer.schedule(new TimerTask() {
+			
+			@Override
+			public void run() {
+				// TODO Auto-generated method stub
+				System.out.println("listening model is running...");
+				List<String> ipList = SimpleServer.getInetList();
+				if(!ipList.isEmpty()){
+					for(int n=0;n < ipList.size();n++)
+					{
+						String ip = ipList.get(n);
+						String message = simpleServer.getMessage(ip);
+						if(message==null)
+						{
+							System.out.println("ip " + ip + " receive message null...");
+							int count = isAliveMap.get(ip);
+							count = count + 1;
+							isAliveMap.put(ip, count);				//update count
+							if (count == 5) {
+								System.out.println("ip " + ip + "is down...");
+								removeIp(n);
+								deleteIpSocketMap(ip);
+								isAliveMap.remove(ip);
+//								continue;
+							}				
+							
+						 }
+					  }
+				}	
+			}
+		}, 0, 1000);   //1秒循环一次
+        
+        
+        
 //
 //        int flag = 0;
 ////        while(true){
@@ -126,13 +164,30 @@ public class SimpleServer implements Runnable{
 
     }
 
-    public List<String> getInetList(){
+    public static List<String> getInetList(){
         return staticInet;
     }
+    
+    public static void removeIp(int index)
+    {
+    	System.out.println("remove ip " + staticInet.get(index) + " success");
+    	staticInet.remove(index);
+    }
 
-    public Map<String,Socket> getMapInettoSocket(){
+    public static Map<String,Socket> getMapInettoSocket(){
         return doubleClient;
     }
+    
+    public static void deleteIpSocketMap(String ip) {
+		try{
+			Socket socket = doubleClient.get(ip);
+			socket.close();
+			doubleClient.remove(ip);
+		}catch (Exception e) {
+			// TODO: handle exception
+			e.printStackTrace();
+		}
+	}
     
     public static SimpleServer getInstance()
     {
@@ -229,7 +284,7 @@ public class SimpleServer implements Runnable{
 //    	    t.start();
 //    	}
 //            return "the return is null";
-        	e.printStackTrace();
+//        	e.printStackTrace();
             //null
         }
 		return null;
@@ -237,20 +292,31 @@ public class SimpleServer implements Runnable{
     
     public String getMessage(String ip)
     {
-    	Socket socket = doubleClient.get(ip);
-    	String message = null;
-    	message = receive(socket);
-    	if(message==null)
+    	try {
+	    	Socket socket = doubleClient.get(ip);
+	    	String message = null;
+	    	message = receive(socket);
+	    	if(message==null)
+	    	{
+	    		System.err.println("ip: "+ip+", receive message null");
+	    	}
+	    	return message;
+    	}catch(Exception e)
     	{
-    		System.err.println("ip: "+ip+", receive message null");
+    		//TDDO
     	}
-    	return message;
+    	return "can not get message";
     }
     
     public void sendMessage(String msg,String ip)
     {
-    	Socket socket = doubleClient.get(ip);
-    	send(msg, socket);
+    	try{
+	    	Socket socket = doubleClient.get(ip);
+	    	send(msg, socket);
+    	}catch(Exception e){
+    		// ip is down
+    		// don't send message
+    	}
     }
 
     private void send(String msg,Socket socket){
@@ -310,6 +376,8 @@ public class SimpleServer implements Runnable{
 		 
 		System.out.println("socket server is running...");
 	        int flag = 0;
+	        
+	        
 //	        while(true){
 	        //accept the connect
 	        while(true){
@@ -326,6 +394,7 @@ public class SimpleServer implements Runnable{
 	            if(!doubleClient.containsKey(newInet)){
 	                doubleClient.put(newInet,socket);
 	                staticInet.add(newInet);
+	                isAliveMap.put(newInet, 0);
 	                try {
 						shakeHand(socket);
 					} catch (Exception e) {
