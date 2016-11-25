@@ -13,6 +13,8 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.python.core.exceptions;
+
 /**
  * Created by JohnJD on 16/11/2.
  */
@@ -31,38 +33,44 @@ public class SimpleServer implements Runnable{
         ss = new ServerSocket(40000);
         
         //listening the host whether is alive
+        System.out.println("listening model is running...");
         Timer timer = new Timer();
 		timer.schedule(new TimerTask() {
 			
 			@Override
 			public void run() {
 				// TODO Auto-generated method stub
-				System.out.println("listening model is running...");
-				List<String> ipList = SimpleServer.getInetList();
-				if(!ipList.isEmpty()){
-					for(int n=0;n < ipList.size();n++)
-					{
-						String ip = ipList.get(n);
-						String message = simpleServer.getMessage(ip);
-						if(message==null)
+	//			System.out.println("listening model is running...");
+				try{
+					List<String> ipList = SimpleServer.getInetList();
+					if(!ipList.isEmpty()){
+						for(int n=0;n < ipList.size();n++)
 						{
-							System.out.println("ip " + ip + " receive message null...");
-							int count = isAliveMap.get(ip);
-							count = count + 1;
-							isAliveMap.put(ip, count);				//update count
-							if (count == 5) {
-								System.out.println("ip " + ip + "is down...");
-								removeIp(n);
-								deleteIpSocketMap(ip);
-								isAliveMap.remove(ip);
-//								continue;
-							}				
-							
-						 }
-					  }
-				}	
+							String ip = ipList.get(n);
+							String message = simpleServer.getMessage(ip);
+							if(message==null)
+							{
+								System.out.println("ip " + ip + " receive message null...");
+								int count = isAliveMap.get(ip);
+								count = count + 1;
+								isAliveMap.put(ip, count);				//update count
+								if (count == 5) {
+									System.out.println("ip " + ip + "is down...");
+									removeIp(n);
+									deleteIpSocketMap(ip);
+									isAliveMap.remove(ip);
+	//								continue;
+								}				
+								
+							 }
+						  }
+					}
+				}catch (Exception e)
+				{
+					e.printStackTrace();
+				}
 			}
-		}, 0, 1000);   //1秒循环一次
+		}, 0, 50);   //0.05秒循环一次
         
         
         
@@ -170,8 +178,12 @@ public class SimpleServer implements Runnable{
     
     public static void removeIp(int index)
     {
-    	System.out.println("remove ip " + staticInet.get(index) + " success");
-    	staticInet.remove(index);
+    	try{
+	    	System.out.println("remove ip " + staticInet.get(index) + " success");
+	    	staticInet.remove(index);
+    	}catch(Exception e){
+    		e.printStackTrace();
+    	}
     }
 
     public static Map<String,Socket> getMapInettoSocket(){

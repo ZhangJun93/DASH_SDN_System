@@ -167,15 +167,16 @@ public class MeterQos extends JFrame implements IFloodlightModule, IOFMessageLis
 		    			*/
 		                //TODO
 		    			//if(dstPort.equals(TCP0))    //发往TCP端口1935的流
-		            	if(IpMeterMap.containsKey(srcIPAddress.toString()))
-		            	{
-		            		//Do None
-		            	}else{
+//		            	if(IpMeterMap.containsKey(dstIPAddress.toString()))
+//		            	{
+//		            		//Do None
+//		            	}else		            	
+		            	if(srcIPAddress.equals(serverIP)||dstIPAddress.equals(serverIP)){
 		            	//	creatFlowTable(sw, packetIn, eth, cntx);
 		            		String info = "收到一个PAKET_IN消息，IP：" + srcIPAddress + " to " + dstIPAddress ;
 			                logger.info(info);
 		    				//addFlowModLim(sw, packetIn, eth, cntx,dstTcp,flowState,flowState_rev);
-			                IpMeterMap.put(srcIPAddress.toString(), ID);
+			                IpMeterMap.put(dstIPAddress.toString(), ID);
 			                creatFlowTable(sw, packetIn, eth, cntx);
 		            	}	
             		
