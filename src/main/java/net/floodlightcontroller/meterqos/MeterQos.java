@@ -483,10 +483,12 @@ public class MeterQos extends JFrame implements IFloodlightModule, IOFMessageLis
 		}catch (Exception e) {
 			// TODO: handle exception
 			logger.error("can not find the meter id of "+ ip);
+			System.err.println("can not find the meter id of "+ ip);
 		}
 		if(id==-1)
 		{
 			logger.error(" can not find the meter id");
+			System.err.println("can not find the meter id");
 			return;
 		}
 		logger.info("trying to modify host ip: " + ip + ",meter id is "+id);
@@ -495,7 +497,7 @@ public class MeterQos extends JFrame implements IFloodlightModule, IOFMessageLis
 		DropMeter.Cmd cmd = DropMeter.Cmd.MODIFY;
 		DropMeter dropMeter = new DropMeter(dpid, id, 0, rate, burst);
 		dropMeter.write(cmd);
-		logger.info("modify meter:"+ id +" success...");
+		logger.info("modify meter: "+ id +" success...");
 		
 	}
 	private static OFFlowMod getFlow(String ip)
@@ -548,9 +550,16 @@ public class MeterQos extends JFrame implements IFloodlightModule, IOFMessageLis
 		{
 			System.out.println("press button I");
 		}
-		if(e.getKeyCode()==KeyEvent.VK_M)
+		if(e.getKeyCode()==KeyEvent.VK_C)
 		{
-			
+			try {
+			algorithm.bWriter.close();
+			algorithm.fWriter.close();
+			System.out.println("success to close fileWriter...");
+			} catch (Exception e2) {
+			// TODO: handle exception
+			e2.printStackTrace();
+			}
 		}
 	}
 

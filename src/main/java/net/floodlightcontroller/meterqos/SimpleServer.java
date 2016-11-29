@@ -13,6 +13,7 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.junit.experimental.theories.Theories;
 import org.python.core.exceptions;
 
 /**
@@ -24,13 +25,15 @@ public class SimpleServer implements Runnable{
     private static Map<String,Socket> doubleClient = new HashMap<>();
     public static SimpleServer simpleServer = null;
     private ServerSocket ss;
-    public static Map<String,Integer> isAliveMap = new HashMap<>();
+ //   public static Map<String,Integer> isAliveMap = new HashMap<>();
+    public Map<String, String> messageMap;
 
     public SimpleServer() throws Exception{
 
 
         //waiting for the connect
         ss = new ServerSocket(40000);
+        messageMap = new HashMap<>();
         
         //listening the host whether is alive
         System.out.println("listening model is running...");
@@ -42,35 +45,58 @@ public class SimpleServer implements Runnable{
 				// TODO Auto-generated method stub
 	//			System.out.println("listening model is running...");
 				try{
-					List<String> ipList = SimpleServer.getInetList();
-					if(!ipList.isEmpty()){
-						for(int n=0;n < ipList.size();n++)
-						{
-							String ip = ipList.get(n);
-							String message = simpleServer.getMessage(ip);
-							if(message==null)
+					//同步
+					synchronized (simpleServer) {
+						List<String> ipList = SimpleServer.getInetList();
+						if(!ipList.isEmpty()){
+							for(int n=0;n < ipList.size();n++)
 							{
-								System.out.println("ip " + ip + " receive message null...");
-								int count = isAliveMap.get(ip);
-								count = count + 1;
-								isAliveMap.put(ip, count);				//update count
-								if (count == 5) {
-									System.out.println("ip " + ip + "is down...");
-									removeIp(n);
-									deleteIpSocketMap(ip);
-									isAliveMap.remove(ip);
-	//								continue;
-								}				
-								
-							 }
+								String ip = ipList.get(n);
+								String message = simpleServer.getMessage(ip);
+																							
+									if(message==null)
+									{	//TODO
+										System.out.println("ip " + ip + " receive message null...");
+										messageMap.remove(ip);
+										removeIp(ip);
+										deleteIpSocketMap(ip);
+									}else{
+										messageMap.put(ip, message);
+										if(message.contains("CLOSED"))
+										{
+											System.out.println("receive CLOSED message... ");
+											messageMap.remove(ip);
+											removeIp(ip);
+											deleteIpSocketMap(ip);										
+										}
+										
+										
+									}
+							
+//							if(message==null)
+//							{
+//								System.out.println("ip " + ip + " receive message null...");
+//								int count = isAliveMap.get(ip);
+//								count = count + 1;
+//								isAliveMap.put(ip, count);				//update count
+//								if (count == 5) {
+//									System.out.println("ip " + ip + "is down...");
+//									removeIp(n);
+//									deleteIpSocketMap(ip);
+//									isAliveMap.remove(ip);
+//	//								continue;
+//								}				
+//								
+//							 }
 						  }
+						}
 					}
 				}catch (Exception e)
 				{
 					e.printStackTrace();
 				}
 			}
-		}, 0, 50);   //0.05秒循环一次
+		}, 0, 1000);   //1秒循环一次
         
         
         
@@ -176,28 +202,35 @@ public class SimpleServer implements Runnable{
         return staticInet;
     }
     
-    public static void removeIp(int index)
+    public void removeIp(String ip)
     {
     	try{
-	    	System.out.println("remove ip " + staticInet.get(index) + " success");
-	    	staticInet.remove(index);
+    		if(staticInet.remove(ip))
+    		{
+    			System.out.println("remove ip: " + ip + " success");
+//    			return true;
+    		}else{
+    			System.out.println("ip: " + ip +  " already been removed...");
+//    			return false;
+    		}
+    		
     	}catch(Exception e){
     		e.printStackTrace();
     	}
     }
 
     public static Map<String,Socket> getMapInettoSocket(){
-        return doubleClient;
+    	return doubleClient;
     }
     
-    public static void deleteIpSocketMap(String ip) {
+    public void deleteIpSocketMap(String ip) {
 		try{
 			Socket socket = doubleClient.get(ip);
-			socket.close();
 			doubleClient.remove(ip);
+			socket.close();
 		}catch (Exception e) {
 			// TODO: handle exception
-			e.printStackTrace();
+			System.err.println("deleteIpSocketMap Exception: socket already been closed ...");
 		}
 	}
     
@@ -302,22 +335,54 @@ public class SimpleServer implements Runnable{
 		return null;
     }
     
+    public boolean isConnected(String ip)
+    {
+    	Socket socket = doubleClient.get(ip);
+    	if(socket.isClosed())
+    	{
+    		return false;
+    	}else{
+    		return true;
+    	}
+    }
+    
     public String getMessage(String ip)
     {
     	try {
 	    	Socket socket = doubleClient.get(ip);
-	    	String message = null;
-	    	message = receive(socket);
-	    	if(message==null)
-	    	{
-	    		System.err.println("ip: "+ip+", receive message null");
-	    	}
-	    	return message;
+//	    	if(socket.isClosed())
+//	    	{
+//	    		return "close";
+//	    	}else{
+		    	String message = null;
+		    	message = receive(socket);
+		    	if(message==null)
+		    	{
+		    		System.err.println("ip: "+ip+", receive message null");
+		    	}
+		    	return message;
     	}catch(Exception e)
     	{
     		//TDDO
     	}
-    	return "can not get message";
+    	return null;
+    }
+    
+    public String getHostMessage(String ip)
+    {
+    	String message = null;
+    	try{
+    		message = messageMap.get(ip);
+    		if(message==null)
+    		{
+    			System.out.println(" getHostMessage error: recieve message null");
+    		}
+    	}catch(Exception e)
+    	{
+    		e.printStackTrace();
+    	}
+    	
+    	return message;
     }
     
     public void sendMessage(String msg,String ip)
@@ -401,27 +466,37 @@ public class SimpleServer implements Runnable{
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
-	            flag = 1;
-	            String newInet = socket.getInetAddress().getHostAddress();
-	            if(!doubleClient.containsKey(newInet)){
-	                doubleClient.put(newInet,socket);
-	                staticInet.add(newInet);
-	                isAliveMap.put(newInet, 0);
-	                try {
-						shakeHand(socket);
-					} catch (Exception e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-	            }else if(doubleClient.containsKey(newInet)){
-	                send("This ip is already used!!!",socket);
-	            }
-	            if(flag == 1){
-	                System.out.println("current number of client is " + staticInet.size());
-//	                System.out.println("current map is " + doubleClient.size());
-	                displayInet();
-	                flag = 0;
-	            }
+				//同步
+				synchronized (this) {
+		            flag = 1;
+		            String newInet = socket.getInetAddress().getHostAddress();
+		            if(!doubleClient.containsKey(newInet)){
+		                doubleClient.put(newInet,socket);
+		                staticInet.add(newInet);
+		 //               isAliveMap.put(newInet, 0);
+		                try {
+							shakeHand(socket);
+						} catch (Exception e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+		            }else if(doubleClient.containsKey(newInet)){
+		                send("This ip is already used!!!",socket);
+		            }
+				}
+		            if(flag == 1){
+		                System.out.println("current number of client is " + staticInet.size());
+	//	                System.out.println("current map is " + doubleClient.size());
+		                displayInet();
+		                flag = 0;
+		            }
+				
+				try {
+					Thread.sleep(200);
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 	        }
 	}
 
