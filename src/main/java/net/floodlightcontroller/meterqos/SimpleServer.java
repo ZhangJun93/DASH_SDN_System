@@ -25,6 +25,8 @@ public class SimpleServer implements Runnable{
     private static Map<String,Socket> doubleClient = new HashMap<>();
     public static SimpleServer simpleServer = null;
     private ServerSocket ss;
+    private FileIO fileIO = null;
+    
  //   public static Map<String,Integer> isAliveMap = new HashMap<>();
     public Map<String, String> messageMap;
 
@@ -34,6 +36,8 @@ public class SimpleServer implements Runnable{
         //waiting for the connect
         ss = new ServerSocket(40000);
         messageMap = new HashMap<>();
+        
+        fileIO = FileIO.getInstance();
         
         //listening the host whether is alive
         System.out.println("listening model is running...");
@@ -60,14 +64,20 @@ public class SimpleServer implements Runnable{
 										messageMap.remove(ip);
 										removeIp(ip);
 										deleteIpSocketMap(ip);
+										
+										fileIO.data.Rlist.remove(n);
+										fileIO.data.Wlist.remove(n);
 									}else{
 										messageMap.put(ip, message);
 										if(message.contains("CLOSED"))
 										{
-											System.out.println("receive CLOSED message... ");
+											System.err.println("receive CLOSED message... ");
 											messageMap.remove(ip);
 											removeIp(ip);
-											deleteIpSocketMap(ip);										
+											deleteIpSocketMap(ip);
+											
+											fileIO.data.Rlist.remove(n);
+											fileIO.data.Wlist.remove(n);
 										}
 										
 										

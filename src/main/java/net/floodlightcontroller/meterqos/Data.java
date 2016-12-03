@@ -1,37 +1,32 @@
 package net.floodlightcontroller.meterqos;
 
+import java.util.ArrayList;
+
 public class Data {						//用于保存算法返回值
-	boolean isChanged ;        //判读数据是否更新,读取后设为false，得到算法后设为true
-	int person;
 	
-	float[] R ;
-	float[] W ;
+	public ArrayList<Float> Rlist ;
+	public ArrayList<Float> Wlist ;
 	
-	public Data(int x)
+	public Data()
 	{
-		person = x;
-		R = new float[person];
-		W = new float[person];
-		isChanged = false;
+		Rlist = new ArrayList<>();
+		Wlist = new ArrayList<>();
 	}
 	
-    public void setR(float[] a)    
+    public void setR(ArrayList<Float> rList)    
     {
-    	int k=0;
-    	for(;k< a.length;k++)
-    	{
-    		R[k] = a[k];
-    	}
-    	isChanged = true;
+    	Rlist.clear();
+    	Rlist = rList;
+ 
     }
-    public void setW(float[] b)
+    public void setW(ArrayList<Float> wList)
     {
-    	int k=0;
-    	for(;k<b.length;k++)
+    	Wlist.clear();
+    	Wlist = wList;
+    	if(Wlist.size()!=Rlist.size())
     	{
-    		W[k] = b[k];
+    		System.err.println("Data error: the length of r not equels w");
     	}
-    	isChanged = true;
     }
 	
 	

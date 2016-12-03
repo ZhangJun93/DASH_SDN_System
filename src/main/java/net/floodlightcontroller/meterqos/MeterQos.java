@@ -24,7 +24,9 @@ import org.projectfloodlight.openflow.protocol.OFStatsRequest;
 import org.projectfloodlight.openflow.protocol.OFType;
 import org.projectfloodlight.openflow.protocol.OFVersion;
 import org.projectfloodlight.openflow.protocol.action.OFAction;
+import org.projectfloodlight.openflow.protocol.action.OFActionEnqueue;
 import org.projectfloodlight.openflow.protocol.action.OFActionOutput;
+import org.projectfloodlight.openflow.protocol.action.OFActionSetQueue;
 import org.projectfloodlight.openflow.protocol.instruction.OFInstruction;
 import org.projectfloodlight.openflow.protocol.instruction.OFInstructionApplyActions;
 import org.projectfloodlight.openflow.protocol.instruction.OFInstructionMeter;
@@ -382,10 +384,27 @@ public class MeterQos extends JFrame implements IFloodlightModule, IOFMessageLis
 				.setMaxLen(0xffFFffFF)
 				.build();
 		
+		
+	
+		
 		actions.add(output);
 		OFInstructionApplyActions applyActions = my13Factory.instructions().buildApplyActions()
 				.setActions(actions)
 				.build();
+		
+//		//test queue
+//		OFActionSetQueue setQueue = my13Factory.actions().buildSetQueue()
+//				.setQueueId(0)
+//				.build();
+//		actions.add(setQueue);
+//		OFFlowAdd flowAdd = my13Factory.buildFlowAdd()
+//				.setMatch(match.build())
+//			    .setActions(actions)
+//			    .setPriority(32675)
+//			    .build();
+//	    //test
+		
+		
 		
 		//OFInstructionApplyActions output = my13Factory.actions().buildOutput()
 			  
@@ -396,7 +415,6 @@ public class MeterQos extends JFrame implements IFloodlightModule, IOFMessageLis
 			instructions.add(meter);
 			//TODO
 			instructions.add(applyActions);
-			  
 			/* Flow will send matched packets to meter ID 1 and then possibly output on port 2 */
 			OFFlowAdd flowAdd = my13Factory.buildFlowAdd()
 				.setMatch(match.build())
