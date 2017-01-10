@@ -72,7 +72,7 @@ public class Algorithm implements Runnable{
 			int  hostNum = 0;									//x5
 			float lowestRate = (float) 0.23;					
 			int CaculateTime = 5;														//x2    多少秒算一次  
-			float totalBandwidth = (float) 1.0;					//x6
+			float totalBandwidth = (float) 2.0;					//x6
 			int segLength = 4;									//x7										
 			//x11 x12
 			int group = 2;	
